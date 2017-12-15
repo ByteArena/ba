@@ -116,7 +116,7 @@ func Main(dir string) (bool, error) {
 	}
 
 	// generate a labels map from the agent's ba.json
-	agentManifest, agentManifesterr := types.ParseFromDir(dir)
+	agentManifest, agentManifesterr := types.ParseAgentManifestFromDir(dir)
 
 	if agentManifesterr != nil {
 		return DONT_SHOW_USAGE, bettererrors.
@@ -124,7 +124,7 @@ func Main(dir string) (bool, error) {
 			With(agentManifesterr)
 	}
 
-	agentManifestValiationErr := types.Validate(agentManifest)
+	agentManifestValiationErr := types.ValidateAgentManifest(agentManifest)
 
 	if agentManifestValiationErr != nil {
 		return DONT_SHOW_USAGE, bettererrors.
@@ -161,7 +161,7 @@ func Main(dir string) (bool, error) {
 	}
 
 	labels := map[string]string{
-		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.ToString(),
+		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.String(),
 	}
 
 	err = runDockerBuild(cli, name, dir, labels)

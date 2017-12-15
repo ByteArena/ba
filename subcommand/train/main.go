@@ -133,7 +133,7 @@ func TrainAction(
 	)
 
 	for _, dockerImageName := range agentimages {
-		agentManifest, err := types.GetByAgentContainer(dockerImageName, orchestrator)
+		agentManifest, err := types.GetAgentManifestByDockerImageName(dockerImageName, orchestrator)
 		if err != nil {
 			return DONT_SHOW_USAGE, err
 		}
