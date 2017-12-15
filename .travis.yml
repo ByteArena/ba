@@ -1,4 +1,7 @@
 language: go
 
+before_install:
+  - curl https://glide.sh/get | sh
+
 go:
   - 1.8.x
