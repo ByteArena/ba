@@ -1,4 +1,4 @@
-OUT = ./build
+OUT = ./bin
 GO = go
 
 .PHONY: build
