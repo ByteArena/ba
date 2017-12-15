@@ -1,0 +1,40 @@
+package: github.com/bytearena/ba
+import:
+- package: github.com/docker/docker
+  version: 147ec3be2e7fe5d35553401990317cf49088ec86
+  subpackages:
+  - api/types
+  - api/types/container
+  - client
+- package: github.com/docker/distribution
+  version: f86db6b22663a27ba4d278220b7e34be528b1e79
+  subpackages:
+  - reference
+- package: github.com/bitly/go-notify
+- package: github.com/gorilla/handlers
+  version: ~1.2.1
+- package: github.com/gorilla/mux
+  version: ~1.4.0
+- package: github.com/gorilla/websocket
+  version: ~1.2.0
+- package: github.com/kardianos/osext
+- package: github.com/satori/go.uuid
+  version: ~1.1.0
+- package: github.com/ttacon/chalk
+  version: ~0.1.0
+- package: github.com/dhconnelly/rtreego
+- package: github.com/skratchdot/open-golang
+- package: github.com/bytearena/box2d
+  version: ^1.0.0
+- package: github.com/bytearena/ecs
+  version: 9807b7a979332b86419262a53b2b7e2295f98a9a
+- package: github.com/go-gl/mathgl
+- package: github.com/cheggaaa/pb
+  version: v2.0.5
+- package: github.com/xtuc/better-errors
+- package: github.com/urfave/cli
+  version: v1.20.0
+- package: github.com/phayes/freeport
+  version: 1.0.2
+- package: github.com/dustinkirkland/golang-petname
+- package: github.com/asaskevich/EventBus

@@ -1,0 +1,195 @@
+hash: 346156b3387951d0ba76371dfcc2958c7964cf8fc76ae5a4142bff9662bdef7a
+updated: 2017-12-09T20:18:49.507498+01:00
+imports:
+- name: github.com/asaskevich/EventBus
+  version: 9223ecd796146991d8ffc3b822d5aa02f15aee97
+- name: github.com/Azure/go-ansiterm
+  version: d6e3b3328b783f23731bc4d058875b0371ff8109
+  subpackages:
+  - winterm
+- name: github.com/bitly/go-notify
+  version: 0a148b8111d688ba7550fc7119fe0d5d8e650838
+- name: github.com/bytearena/box2d
+  version: 58acea7fee08a5fbb5a3a4c8f867205dd9826ae1
+- name: github.com/bytearena/core
+  version: fafec825cf754c9b1077f1934d7338d132268349
+  subpackages:
+  - arenaserver
+  - arenaserver/agent
+  - arenaserver/comm
+  - arenaserver/container
+  - arenaserver/types
+  - common
+  - common/assert
+  - common/dockerfile
+  - common/leakybucket
+  - common/mappack
+  - common/mq
+  - common/recording
+  - common/replay
+  - common/types
+  - common/types/datastructures
+  - common/types/mapcontainer
+  - common/utils
+  - common/utils/number
+  - common/utils/trigo
+  - common/utils/vector
+  - common/visibility2d
+  - common/visualization
+  - common/visualization/handler
+  - common/visualization/types
+  - game/common
+  - game/deathmatch
+  - game/deathmatch/events
+  - game/deathmatch/mailboxmessages
+- name: github.com/bytearena/ecs
+  version: 9807b7a979332b86419262a53b2b7e2295f98a9a
+- name: github.com/bytearena/schnapps
+  version: fe4096fe91478ed00f1fbb532fe81cb9ca5911e3
+  subpackages:
+  - utils
+- name: github.com/cheggaaa/pb
+  version: fec330ed6ef74d0a026da2c639821ee0d9f97687
+- name: github.com/containerd/continuity
+  version: 0cf103d319cc2d7efe085224094f466d1f8b9640
+  subpackages:
+  - pathdriver
+- name: github.com/dhconnelly/rtreego
+  version: 1323b09fe8f32430ea7e16ea1df99e106e3e6250
+- name: github.com/docker/distribution
+  version: f86db6b22663a27ba4d278220b7e34be528b1e79
+  subpackages:
+  - digestset
+  - reference
+- name: github.com/docker/docker
+  version: 147ec3be2e7fe5d35553401990317cf49088ec86
+  subpackages:
+  - api
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/events
+  - api/types/filters
+  - api/types/image
+  - api/types/mount
+  - api/types/network
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/swarm/runtime
+  - api/types/time
+  - api/types/versions
+  - api/types/volume
+  - builder/dockerfile/command
+  - builder/dockerfile/parser
+  - client
+  - pkg/jsonmessage
+  - pkg/mount
+  - pkg/system
+  - pkg/term
+  - pkg/term/windows
+- name: github.com/docker/go-connections
+  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
+  subpackages:
+  - nat
+  - sockets
+  - tlsconfig
+- name: github.com/docker/go-units
+  version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
+- name: github.com/dustinkirkland/golang-petname
+  version: d3c2ba80e75eeef10c5cf2fc76d2c809637376b3
+- name: github.com/go-gl/mathgl
+  version: 4c3fc6b4bf30179013667e5d0b926e024d9a13c1
+  subpackages:
+  - mgl64
+- name: github.com/gogo/protobuf
+  version: 41168f6614b7bb144818ec8967b8c702705df564
+  subpackages:
+  - proto
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/handlers
+  version: a4043c62cc2329bacda331d33fc908ab11ef0ec3
+- name: github.com/gorilla/mux
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
+- name: github.com/kardianos/osext
+  version: ae77be60afb1dcacde03767a8c37337fad28ac14
+- name: github.com/mailru/easyjson
+  version: 32fa128f234d041f196a9f3e0fea5ac9772c08e1
+  subpackages:
+  - buffer
+  - jlexer
+  - jwriter
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
+- name: github.com/Microsoft/go-winio
+  version: 78439966b38d69bf38227fbf57ac8a6fee70f69a
+- name: github.com/Nvveen/Gotty
+  version: cd527374f1e5bff4938207604a14f2e38a9cf512
+- name: github.com/opencontainers/go-digest
+  version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
+- name: github.com/opencontainers/image-spec
+  version: 577479e4dc273d3779f00c223c7e0dba4cd6b8b0
+  subpackages:
+  - specs-go
+  - specs-go/v1
+- name: github.com/phayes/freeport
+  version: b8543db493a5ed890c5499e935e2cad7504f3a04
+- name: github.com/pkg/errors
+  version: f15c970de5b76fac0b59abb32d62c17cc7bed265
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
+- name: github.com/sirupsen/logrus
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
+- name: github.com/skratchdot/open-golang
+  version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
+  subpackages:
+  - open
+- name: github.com/ttacon/chalk
+  version: 76b3c8b611dea8f83e49e9ce81fc2b189e0ef3d2
+- name: github.com/urfave/cli
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
+- name: github.com/xtuc/better-errors
+  version: a4f3ac7b04d7dd153e4f382947a0821278c0f660
+  subpackages:
+  - printer/tree
+- name: golang.org/x/crypto
+  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/image
+  version: e5db4c466346ada62f27934dab20e4b6f6bda285
+  subpackages:
+  - math/f64
+- name: golang.org/x/net
+  version: dc871a5d77e227f5bbf6545176ef3eeebf87e76e
+  subpackages:
+  - context
+  - context/ctxhttp
+  - proxy
+- name: golang.org/x/sys
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  subpackages:
+  - unix
+  - windows
+- name: gopkg.in/cheggaaa/pb.v2
+  version: c112833d014c77e8bde723fd0158e3156951639f
+  subpackages:
+  - termutil
+- name: gopkg.in/fatih/color.v1
+  version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
+- name: gopkg.in/mattn/go-colorable.v0
+  version: 167de6bfdfba052fa6b2d3664c8f5272e23c9072
+- name: gopkg.in/mattn/go-isatty.v0
+  version: 0360b2af4f38e8d38c7fce2a9f4e702702d73a39
+- name: gopkg.in/mattn/go-runewidth.v0
+  version: 9e777a8366cce605130a531d2cd6363d07ad7317
+- name: gopkg.in/VividCortex/ewma.v1
+  version: b24eb346a94c3ba12c1da1e564dbac1b498a77ce
+testImports: []
