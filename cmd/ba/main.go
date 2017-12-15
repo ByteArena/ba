@@ -92,6 +92,7 @@ func makeapp() *cli.App {
 				cli.BoolFlag{Name: "debug", Usage: "Enable debug logging"},
 				cli.BoolFlag{Name: "profile", Usage: "Enable execution profiling"},
 				cli.BoolFlag{Name: "dump-raw-comm", Usage: "Dump all the communication between the agent and the server"},
+				cli.IntFlag{Name: "duration", Usage: "If set, game will stop after this durarion (in seconds)"},
 			},
 			Action: func(c *cli.Context) error {
 				tps := c.Int("tps")
@@ -104,6 +105,7 @@ func makeapp() *cli.App {
 				isDebug := c.Bool("debug")
 				shouldProfile := c.Bool("profile")
 				dumpRaw := c.Bool("dump-raw-comm")
+				duration := c.Int("duration")
 
 				showUsage, err := train.TrainAction(
 					tps,
@@ -116,6 +118,7 @@ func makeapp() *cli.App {
 					mapName,
 					shouldProfile,
 					dumpRaw,
+					duration,
 				)
 
 				if err != nil {

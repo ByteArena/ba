@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -18,7 +19,6 @@ import (
 
 	bettererrors "github.com/xtuc/better-errors"
 
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/dockerfile"
 	"github.com/bytearena/core/common/utils"
 )
@@ -29,8 +29,6 @@ const (
 	SHOW_USAGE      = true
 	DONT_SHOW_USAGE = false
 )
-
-type ImageLabels map[string]string
 
 func welcomeBanner() {
 	fmt.Println("=== ")
@@ -115,23 +113,6 @@ func Main(dir string) (bool, error) {
 		return SHOW_USAGE, bettererrors.New("The specified directory does not contain any Dockerfile; is it really the source code of an agent?")
 	}
 
-	// generate a labels map from the agent's ba.json
-	agentManifest, agentManifesterr := agentmanifest.ParseFromDir(dir)
-
-	if agentManifesterr != nil {
-		return DONT_SHOW_USAGE, bettererrors.
-			New("Failed to parse agent manifest").
-			With(agentManifesterr)
-	}
-
-	agentManifestValiationErr := agentmanifest.Validate(agentManifest)
-
-	if agentManifestValiationErr != nil {
-		return DONT_SHOW_USAGE, bettererrors.
-			New("Invalid agent manifest").
-			With(agentManifestValiationErr)
-	}
-
 	cli, err := client.NewEnvClient()
 
 	if err != nil {
@@ -160,11 +141,7 @@ func Main(dir string) (bool, error) {
 		name = path.Base(dir)
 	}
 
-	labels := map[string]string{
-		agentmanifest.AGENT_MANIFEST_LABEL_KEY: agentManifest.ToString(),
-	}
-
-	err = runDockerBuild(cli, name, dir, labels)
+	err = runDockerBuild(cli, name, dir)
 
 	if err != nil {
 		return DONT_SHOW_USAGE, err
@@ -233,50 +210,62 @@ func createTar(dir string) (io.Reader, error) {
 func doTar(tw *tar.Writer, dir string, basedir string) error {
 	basedir = strings.TrimSuffix(basedir, "/") + "/"
 
-	files, err := ioutil.ReadDir(dir)
+	// from https://stackoverflow.com/a/40003617
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+		}
+
+		var link string
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			if link, err = os.Readlink(path); err != nil {
+				return err
+			}
+		}
+
+		header, err := tar.FileInfoHeader(info, link)
+		if err != nil {
+			return err
+		}
+
+		header.Name = strings.TrimPrefix(path, basedir)
+		if err = tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if !info.Mode().IsRegular() { //nothing more to do for non-regular
+			return nil
+		}
+
+		fh, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer fh.Close()
+
+		if _, err = io.CopyBuffer(tw, fh, nil); err != nil {
+			return err
+		}
+		return nil
+	})
 
 	if err != nil {
 		return err
 	}
 
-	for _, f := range files {
-		fqn := path.Join(dir, f.Name())
-		relpath := strings.TrimPrefix(fqn, basedir)
-
-		if f.IsDir() {
-			err := doTar(tw, fqn, basedir)
-
-			if err != nil {
-				return err
-			}
-		} else {
-			tw.WriteHeader(&tar.Header{
-				Name: relpath,
-				Size: f.Size(),
-				Mode: int64(f.Mode()),
-			})
-
-			contents, err := ioutil.ReadFile(fqn)
-			_, err = tw.Write(contents)
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
-func runDockerBuild(cli *client.Client, name, dir string, labels ImageLabels) error {
+func runDockerBuild(cli *client.Client, name, dir string) error {
 	ctx := context.Background()
 
 	// TODO(sven): in addition of the name, we can add a tag to be able to list
 	// our images. Useful in the bash autocomplete instead of listing the entire
 	// local registry.
 	opts := dockertypes.ImageBuildOptions{
-		Tags:   []string{name},
-		Labels: labels,
+		Tags: []string{name},
 	}
 
 	tar, tarErr := createTar(dir)

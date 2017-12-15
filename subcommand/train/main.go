@@ -20,7 +20,6 @@ import (
 	"github.com/bytearena/core/arenaserver"
 	"github.com/bytearena/core/arenaserver/container"
 	"github.com/bytearena/core/common"
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/mappack"
 	"github.com/bytearena/core/common/mq"
 	"github.com/bytearena/core/common/recording"
@@ -35,17 +34,30 @@ import (
 // TODO(sven): we should disable the colors when the terminal has no frontend
 // and/or expliclty pass an --no-colors argument.
 var (
-	DebugColor = chalk.Cyan.Color
-	GameColor  = chalk.Blue.Color
-	AgentColor = chalk.Green.Color
-	LogColor   = chalk.ResetColor.Color
+	DebugColor   = chalk.Cyan.Color
+	GameColor    = chalk.Blue.Color
+	AgentColor   = chalk.Green.Color
+	HeadsUpColor = chalk.Yellow.Color
+	LogColor     = chalk.ResetColor.Color
 )
 
 const (
 	TIME_BEFORE_FORCE_QUIT = 5 * time.Second
 )
 
-func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile string, agentimages []string, isDebug bool, mapName string, shouldProfile, dumpRaw bool) (bool, error) {
+func TrainAction(
+	tps int,
+	host string,
+	vizport int,
+	nobrowser bool,
+	recordFile string,
+	agentimages []string,
+	isDebug bool,
+	mapName string,
+	shouldProfile,
+	dumpRaw bool,
+	durationSeconds int,
+) (bool, error) {
 
 	if shouldProfile {
 		f, err := os.Create("./cpu.prof")
@@ -56,6 +68,13 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 			log.Fatal("could not start CPU profile: ", err)
 		}
 		defer pprof.StopCPUProfile()
+	}
+
+	var gameDuration *time.Duration
+
+	if durationSeconds > 0 {
+		d := time.Duration(durationSeconds) * time.Second
+		gameDuration = &d
 	}
 
 	shutdownChan := make(chan bool)
@@ -88,13 +107,8 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 	if err != nil {
 		utils.FailWith(err)
 	}
-
-	orchestrator := container.MakeLocalContainerOrchestrator(host)
-
-	for _, _ = range agentimages {
-		agentManifest := agentmanifest.GetByAgentContainer()
-
-		gamedescription.AddAgent(agentManifest)
+	for _, contestant := range agentimages {
+		gamedescription.AddContestant(contestant)
 	}
 
 	// Make message broker client
@@ -131,6 +145,9 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 			case arenaserver.EventWarn:
 				utils.WarnWith(t.Err)
 
+			case arenaserver.EventHeadsUp:
+				fmt.Printf(HeadsUpColor("[headsup] %s\n"), t.Value)
+
 			case arenaserver.EventRawComm:
 				if dumpRaw {
 					fmt.Printf(AgentColor("[agent] %s\n"), t.Value)
@@ -152,8 +169,16 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 		}
 	}()
 
-	for _, agent := range gamedescription.GetAgents() {
-		srv.RegisterAgent(agent)
+	for _, contestant := range gamedescription.GetContestants() {
+		var image string
+
+		if contestant.AgentRegistry == "" {
+			image = contestant.AgentImage
+		} else {
+			image = contestant.AgentRegistry + "/" + contestant.AgentImage
+		}
+
+		srv.RegisterAgent(image, contestant)
 	}
 
 	// handling signals
@@ -183,10 +208,8 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 	vizgames := make([]*types.VizGame, 1)
 	vizgames[0] = types.NewVizGame(gamedescription)
 
-	webclientpath := utils.GetExecutableDir() + "/../viz-server/webclient/"
 	vizservice := visualization.NewVizService(
-		"0.0.0.0:"+strconv.Itoa(vizport),
-		webclientpath,
+		"127.0.0.1:"+strconv.Itoa(vizport),
 		mapName,
 		func() ([]*types.VizGame, error) { return vizgames, nil },
 		recorder,
@@ -195,7 +218,7 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 
 	vizservice.Start()
 
-	serverChan, startErr := srv.Start()
+	serverShutdown, startErr := srv.Start()
 
 	if startErr != nil {
 		utils.FailWith(startErr)
@@ -207,11 +230,11 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 		open.Run(url)
 	}
 
-	fmt.Println("\033[0;34m\nGame running at " + url + "\033[0m\n")
+	srv.Log(arenaserver.EventHeadsUp{"Game running at " + url})
 
 	// Wait until someone asks for shutdown
 	select {
-	case <-serverChan:
+	case <-serverShutdown:
 	case <-shutdownChan:
 	}
 
