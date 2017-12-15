@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	dockertypes "github.com/docker/docker/api/types"
@@ -209,36 +210,49 @@ func createTar(dir string) (io.Reader, error) {
 func doTar(tw *tar.Writer, dir string, basedir string) error {
 	basedir = strings.TrimSuffix(basedir, "/") + "/"
 
-	files, err := ioutil.ReadDir(dir)
+	// from https://stackoverflow.com/a/40003617
 
-	if err != nil {
-		return err
-	}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 
-	for _, f := range files {
-		fqn := path.Join(dir, f.Name())
-		relpath := strings.TrimPrefix(fqn, basedir)
+		if err != nil {
+			return err
+		}
 
-		if f.IsDir() {
-			err := doTar(tw, fqn, basedir)
-
-			if err != nil {
-				return err
-			}
-		} else {
-			tw.WriteHeader(&tar.Header{
-				Name: relpath,
-				Size: f.Size(),
-				Mode: int64(f.Mode()),
-			})
-
-			contents, err := ioutil.ReadFile(fqn)
-			_, err = tw.Write(contents)
-
-			if err != nil {
+		var link string
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			if link, err = os.Readlink(path); err != nil {
 				return err
 			}
 		}
+
+		header, err := tar.FileInfoHeader(info, link)
+		if err != nil {
+			return err
+		}
+
+		header.Name = strings.TrimPrefix(path, basedir)
+		if err = tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if !info.Mode().IsRegular() { //nothing more to do for non-regular
+			return nil
+		}
+
+		fh, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer fh.Close()
+
+		if _, err = io.CopyBuffer(tw, fh, nil); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
