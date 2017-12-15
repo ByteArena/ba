@@ -13,7 +13,7 @@ import (
 
 var (
 	samples = map[string]string{
-		"nodejs": "https://github.com/ByteArena/sample-nodejs-agent.git",
+		"nodejs": "https://github.com/ByteArena/sampleagent-deathmatch-nodejs.git",
 	}
 )
 
