@@ -122,12 +122,14 @@ func TrainAction(
 
 	orchestrator := container.MakeLocalContainerOrchestrator(host)
 
+	arenaServerUUID := ""
+
 	srv := arenaserver.NewServer(
 		host,
 		orchestrator,
 		gamedescription,
 		game,
-		"",
+		arenaServerUUID,
 		brokerclient,
 		gameDuration,
 	)
@@ -139,7 +141,9 @@ func TrainAction(
 		}
 
 		agent := types.Agent{Manifest: agentManifest}
+
 		gamedescription.AddAgent(agent)
+		srv.RegisterAgent(agent)
 	}
 
 	// consume server events
