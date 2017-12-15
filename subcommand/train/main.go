@@ -23,9 +23,10 @@ import (
 	"github.com/bytearena/core/common/mappack"
 	"github.com/bytearena/core/common/mq"
 	"github.com/bytearena/core/common/recording"
+	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/utils"
 	"github.com/bytearena/core/common/visualization"
-	"github.com/bytearena/core/common/visualization/types"
+	viztypes "github.com/bytearena/core/common/visualization/types"
 	"github.com/bytearena/core/game/deathmatch"
 
 	mapcmd "github.com/bytearena/ba/subcommand/map"
@@ -39,6 +40,11 @@ var (
 	AgentColor   = chalk.Green.Color
 	HeadsUpColor = chalk.Yellow.Color
 	LogColor     = chalk.ResetColor.Color
+)
+
+const (
+	SHOW_USAGE      = true
+	DONT_SHOW_USAGE = false
 )
 
 const (
@@ -93,10 +99,14 @@ func TrainAction(
 	}
 
 	if len(agentimages) == 0 {
-		return true, bettererrors.New("No agents were specified")
+		return SHOW_USAGE, bettererrors.New("No agents were specified")
 	}
 
 	runPreflightChecks()
+
+	// Make message broker client
+	brokerclient, err := NewMemoryMessageClient()
+	utils.Check(err, "ERROR: Could not connect to messagebroker")
 
 	mappack, errMappack := mappack.UnzipAndGetHandles(mapcmd.GetMapLocation(mapName))
 	if errMappack != nil {
@@ -107,25 +117,34 @@ func TrainAction(
 	if err != nil {
 		utils.FailWith(err)
 	}
-	for _, contestant := range agentimages {
-		gamedescription.AddContestant(contestant)
-	}
-
-	// Make message broker client
-	brokerclient, err := NewMemoryMessageClient()
-	utils.Check(err, "ERROR: Could not connect to messagebroker")
 
 	game := deathmatch.NewDeathmatchGame(gamedescription)
 
+	orchestrator := container.MakeLocalContainerOrchestrator(host)
+
+	arenaServerUUID := ""
+
 	srv := arenaserver.NewServer(
 		host,
-		container.MakeLocalContainerOrchestrator(host),
+		orchestrator,
 		gamedescription,
 		game,
-		"",
+		arenaServerUUID,
 		brokerclient,
 		gameDuration,
 	)
+
+	for _, dockerImageName := range agentimages {
+		agentManifest, err := types.GetAgentManifestByDockerImageName(dockerImageName, orchestrator)
+		if err != nil {
+			return DONT_SHOW_USAGE, err
+		}
+
+		agent := types.Agent{Manifest: agentManifest}
+
+		gamedescription.AddAgent(agent)
+		srv.RegisterAgent(agent)
+	}
 
 	// consume server events
 	go func() {
@@ -177,18 +196,6 @@ func TrainAction(
 		}
 	}()
 
-	for _, contestant := range gamedescription.GetContestants() {
-		var image string
-
-		if contestant.AgentRegistry == "" {
-			image = contestant.AgentImage
-		} else {
-			image = contestant.AgentRegistry + "/" + contestant.AgentImage
-		}
-
-		srv.RegisterAgent(image, contestant)
-	}
-
 	// handling signals
 	go func() {
 		<-common.SignalHandler()
@@ -213,13 +220,13 @@ func TrainAction(
 
 	// TODO(jerome): refac webclient path / serving
 
-	vizgames := make([]*types.VizGame, 1)
-	vizgames[0] = types.NewVizGame(gamedescription)
+	vizgames := make([]*viztypes.VizGame, 1)
+	vizgames[0] = viztypes.NewVizGame(gamedescription)
 
 	vizservice := visualization.NewVizService(
 		"127.0.0.1:"+strconv.Itoa(vizport),
 		mapName,
-		func() ([]*types.VizGame, error) { return vizgames, nil },
+		func() ([]*viztypes.VizGame, error) { return vizgames, nil },
 		recorder,
 		mappack,
 	)
@@ -264,5 +271,5 @@ func TrainAction(
 
 	vizservice.Stop()
 
-	return false, nil
+	return DONT_SHOW_USAGE, nil
 }

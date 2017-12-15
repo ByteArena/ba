@@ -2,8 +2,6 @@ package train
 
 import (
 	"encoding/json"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bytearena/core/common/mappack"
@@ -15,7 +13,7 @@ import (
 
 type MockGame struct {
 	tps          int
-	contestants  []types.Contestant
+	agents       []types.Agent
 	mapContainer *mapcontainer.MapContainer
 }
 
@@ -38,7 +36,7 @@ func NewMockGame(tps int, mapbundle *mappack.MappackInMemoryArchive) (*MockGame,
 
 	return &MockGame{
 		tps:          tps,
-		contestants:  make([]types.Contestant, 0),
+		agents:       make([]types.Agent, 0),
 		mapContainer: &mapContainer,
 	}, nil
 }
@@ -67,31 +65,12 @@ func (game *MockGame) GetEndedAt() string {
 	return ""
 }
 
-func (game *MockGame) AddContestant(agentimage string) {
-
-	parts := strings.Split(agentimage, "/")
-	var registry string
-	var imagename string
-
-	if len(parts) == 3 {
-		registry = parts[0]
-		imagename = strings.Join(parts[1:], "/")
-	} else {
-		registry = ""
-		imagename = agentimage
-	}
-
-	game.contestants = append(game.contestants, types.Contestant{
-		Id:            strconv.Itoa(len(game.contestants) + 1),
-		Username:      "trainer-user",
-		AgentName:     agentimage,
-		AgentRegistry: registry,
-		AgentImage:    imagename,
-	})
+func (game *MockGame) AddAgent(agent types.Agent) {
+	game.agents = append(game.agents, agent)
 }
 
-func (game *MockGame) GetContestants() []types.Contestant {
-	return game.contestants
+func (game *MockGame) GetAgents() []types.Agent {
+	return game.agents
 }
 
 func (game *MockGame) GetMapContainer() *mapcontainer.MapContainer {
