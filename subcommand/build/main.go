@@ -19,7 +19,6 @@ import (
 
 	bettererrors "github.com/xtuc/better-errors"
 
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/dockerfile"
 	"github.com/bytearena/core/common/utils"
 )
@@ -30,8 +29,6 @@ const (
 	SHOW_USAGE      = true
 	DONT_SHOW_USAGE = false
 )
-
-type ImageLabels map[string]string
 
 func welcomeBanner() {
 	fmt.Println("=== ")
@@ -116,23 +113,6 @@ func Main(dir string) (bool, error) {
 		return SHOW_USAGE, bettererrors.New("The specified directory does not contain any Dockerfile; is it really the source code of an agent?")
 	}
 
-	// generate a labels map from the agent's ba.json
-	agentManifest, agentManifesterr := agentmanifest.ParseFromDir(dir)
-
-	if agentManifesterr != nil {
-		return DONT_SHOW_USAGE, bettererrors.
-			New("Failed to parse agent manifest").
-			With(agentManifesterr)
-	}
-
-	agentManifestValiationErr := agentmanifest.Validate(agentManifest)
-
-	if agentManifestValiationErr != nil {
-		return DONT_SHOW_USAGE, bettererrors.
-			New("Invalid agent manifest").
-			With(agentManifestValiationErr)
-	}
-
 	cli, err := client.NewEnvClient()
 
 	if err != nil {
@@ -161,11 +141,7 @@ func Main(dir string) (bool, error) {
 		name = path.Base(dir)
 	}
 
-	labels := map[string]string{
-		agentmanifest.AGENT_MANIFEST_LABEL_KEY: agentManifest.ToString(),
-	}
-
-	err = runDockerBuild(cli, name, dir, labels)
+	err = runDockerBuild(cli, name, dir)
 
 	if err != nil {
 		return DONT_SHOW_USAGE, err
@@ -282,15 +258,14 @@ func doTar(tw *tar.Writer, dir string, basedir string) error {
 	return nil
 }
 
-func runDockerBuild(cli *client.Client, name, dir string, labels ImageLabels) error {
+func runDockerBuild(cli *client.Client, name, dir string) error {
 	ctx := context.Background()
 
 	// TODO(sven): in addition of the name, we can add a tag to be able to list
 	// our images. Useful in the bash autocomplete instead of listing the entire
 	// local registry.
 	opts := dockertypes.ImageBuildOptions{
-		Tags:   []string{name},
-		Labels: labels,
+		Tags: []string{name},
 	}
 
 	tar, tarErr := createTar(dir)

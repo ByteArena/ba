@@ -2,9 +2,10 @@ package train
 
 import (
 	"encoding/json"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/mappack"
 	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/types/mapcontainer"
@@ -14,7 +15,7 @@ import (
 
 type MockGame struct {
 	tps          int
-	agents       []types.Agent
+	contestants  []types.Contestant
 	mapContainer *mapcontainer.MapContainer
 }
 
@@ -37,7 +38,7 @@ func NewMockGame(tps int, mapbundle *mappack.MappackInMemoryArchive) (*MockGame,
 
 	return &MockGame{
 		tps:          tps,
-		agents:       make([]types.Agent, 0),
+		contestants:  make([]types.Contestant, 0),
 		mapContainer: &mapContainer,
 	}, nil
 }
@@ -66,15 +67,31 @@ func (game *MockGame) GetEndedAt() string {
 	return ""
 }
 
-func (game *MockGame) AddAgent(agentmanifest agentmanifest.AgentManifest) {
+func (game *MockGame) AddContestant(agentimage string) {
 
-	game.agents = append(game.agents, types.Agent{
-		Manifest: agentmanifest,
+	parts := strings.Split(agentimage, "/")
+	var registry string
+	var imagename string
+
+	if len(parts) == 3 {
+		registry = parts[0]
+		imagename = strings.Join(parts[1:], "/")
+	} else {
+		registry = ""
+		imagename = agentimage
+	}
+
+	game.contestants = append(game.contestants, types.Contestant{
+		Id:            strconv.Itoa(len(game.contestants) + 1),
+		Username:      "trainer-user",
+		AgentName:     agentimage,
+		AgentRegistry: registry,
+		AgentImage:    imagename,
 	})
 }
 
-func (game *MockGame) GetAgents() []types.Agent {
-	return game.agents
+func (game *MockGame) GetContestants() []types.Contestant {
+	return game.contestants
 }
 
 func (game *MockGame) GetMapContainer() *mapcontainer.MapContainer {
