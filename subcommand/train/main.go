@@ -20,6 +20,7 @@ import (
 	"github.com/bytearena/core/arenaserver"
 	"github.com/bytearena/core/arenaserver/container"
 	"github.com/bytearena/core/common"
+	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/mappack"
 	"github.com/bytearena/core/common/mq"
 	"github.com/bytearena/core/common/recording"
@@ -88,8 +89,12 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 		utils.FailWith(err)
 	}
 
-	for _, contestant := range agentimages {
-		gamedescription.AddContestant(contestant)
+	orchestrator := container.MakeLocalContainerOrchestrator(host)
+
+	for _, _ = range agentimages {
+		agentManifest := agentmanifest.GetByAgentContainer()
+
+		gamedescription.AddAgent(agentManifest)
 	}
 
 	// Make message broker client
@@ -98,7 +103,7 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 
 	game := deathmatch.NewDeathmatchGame(gamedescription)
 
-	srv := arenaserver.NewServer(host, container.MakeLocalContainerOrchestrator(host), gamedescription, game, "", brokerclient)
+	srv := arenaserver.NewServer(host, orchestrator, gamedescription, game, "", brokerclient)
 
 	// consume server events
 	go func() {
@@ -147,16 +152,8 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 		}
 	}()
 
-	for _, contestant := range gamedescription.GetContestants() {
-		var image string
-
-		if contestant.AgentRegistry == "" {
-			image = contestant.AgentImage
-		} else {
-			image = contestant.AgentRegistry + "/" + contestant.AgentImage
-		}
-
-		srv.RegisterAgent(image, contestant)
+	for _, agent := range gamedescription.GetAgents() {
+		srv.RegisterAgent(agent)
 	}
 
 	// handling signals
