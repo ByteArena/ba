@@ -34,16 +34,16 @@ type ImageLabels map[string]string
 
 func welcomeBanner() {
 	fmt.Println("=== ")
-	fmt.Println("=== 🤖  Welcome! I'm the Byte Arena Builder Bot (the local one)")
+	fmt.Println("=== 🤖  Welcome! I'm the Byte Arena Builder Bot")
 	fmt.Println("=== ")
 	fmt.Println("")
 }
 
-func successBanner(name string) {
+func successBanner(id string) {
 	fmt.Println("")
 	fmt.Println("=== ")
 	fmt.Println("=== ✅  Your agent has been built. Let'em know who's the best!")
-	fmt.Println("===    Its name is: " + name)
+	fmt.Println("===    Its id is: " + id)
 	fmt.Println("=== ")
 	fmt.Println("")
 }
@@ -145,32 +145,19 @@ func Main(dir string) (bool, error) {
 	fmt.Println("=== Building your agent now.")
 	fmt.Println("")
 
-	var name string
-
-	// handles duilding . - https://github.com/ByteArena/cli/issues/8
-	if dir == "." {
-		cw, cwerr := os.Getwd()
-
-		if cwerr != nil {
-			return DONT_SHOW_USAGE, cwerr
-		}
-
-		name = path.Base(cw)
-	} else {
-		name = path.Base(dir)
-	}
+	id := agentManifest.Id
 
 	labels := map[string]string{
 		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.String(),
 	}
 
-	err = runDockerBuild(cli, name, dir, labels)
+	err = runDockerBuild(cli, id, dir, labels)
 
 	if err != nil {
 		return DONT_SHOW_USAGE, err
 	}
 
-	successBanner(name)
+	successBanner(id)
 
 	return DONT_SHOW_USAGE, nil
 }
