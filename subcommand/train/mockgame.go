@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/mappack"
 	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/types/mapcontainer"
@@ -66,11 +65,8 @@ func (game *MockGame) GetEndedAt() string {
 	return ""
 }
 
-func (game *MockGame) AddAgent(agentmanifest agentmanifest.AgentManifest) {
-
-	game.agents = append(game.agents, types.Agent{
-		Manifest: agentmanifest,
-	})
+func (game *MockGame) AddAgent(agent types.Agent) {
+	game.agents = append(game.agents, agent)
 }
 
 func (game *MockGame) GetAgents() []types.Agent {

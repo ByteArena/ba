@@ -19,16 +19,15 @@ import (
 
 	bettererrors "github.com/xtuc/better-errors"
 
-	"github.com/bytearena/core/common/agentmanifest"
 	"github.com/bytearena/core/common/dockerfile"
+	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/utils"
 )
 
 const (
 	DOCKER_BUILD_FILE = "Dockerfile"
-
-	SHOW_USAGE      = true
-	DONT_SHOW_USAGE = false
+	SHOW_USAGE        = true
+	DONT_SHOW_USAGE   = false
 )
 
 type ImageLabels map[string]string
@@ -117,7 +116,7 @@ func Main(dir string) (bool, error) {
 	}
 
 	// generate a labels map from the agent's ba.json
-	agentManifest, agentManifesterr := agentmanifest.ParseFromDir(dir)
+	agentManifest, agentManifesterr := types.ParseFromDir(dir)
 
 	if agentManifesterr != nil {
 		return DONT_SHOW_USAGE, bettererrors.
@@ -125,7 +124,7 @@ func Main(dir string) (bool, error) {
 			With(agentManifesterr)
 	}
 
-	agentManifestValiationErr := agentmanifest.Validate(agentManifest)
+	agentManifestValiationErr := types.Validate(agentManifest)
 
 	if agentManifestValiationErr != nil {
 		return DONT_SHOW_USAGE, bettererrors.
@@ -162,7 +161,7 @@ func Main(dir string) (bool, error) {
 	}
 
 	labels := map[string]string{
-		agentmanifest.AGENT_MANIFEST_LABEL_KEY: agentManifest.ToString(),
+		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.ToString(),
 	}
 
 	err = runDockerBuild(cli, name, dir, labels)
