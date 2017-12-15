@@ -103,7 +103,7 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 
 	game := deathmatch.NewDeathmatchGame(gamedescription)
 
-	srv := arenaserver.NewServer(host, orchestrator, gamedescription, game, "", brokerclient)
+	srv := arenaserver.NewServer(host, orchestrator, gamedescription, game, "", brokerclient, gameDuration)
 
 	// consume server events
 	go func() {
