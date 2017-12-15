@@ -87,6 +87,7 @@ func TrainAction(tps int, host string, vizport int, nobrowser bool, recordFile s
 	if err != nil {
 		utils.FailWith(err)
 	}
+
 	for _, contestant := range agentimages {
 		gamedescription.AddContestant(contestant)
 	}
