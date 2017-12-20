@@ -1,5 +1,5 @@
-hash: 346156b3387951d0ba76371dfcc2958c7964cf8fc76ae5a4142bff9662bdef7a
-updated: 2017-12-09T20:18:49.507498+01:00
+hash: a89fbed50ceadaa3b369ba9f7326618c1a328a0599586c55a8a661a46d887aec
+updated: 2017-12-20T09:52:20.676093923+01:00
 imports:
 - name: github.com/asaskevich/EventBus
   version: 9223ecd796146991d8ffc3b822d5aa02f15aee97
