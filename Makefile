@@ -16,3 +16,8 @@ install: build
 	cp $(OUT)/ba /usr/local/bin/ba
 
 test: build
+
+install-dev:
+	git clone https://github.com/ByteArena/core.git $(GOPATH)/src/github.com/bytearena/core
+	rm -rf vendor/github.com/bytearena/core
+	ln -s $(GOPATH)/src/github.com/bytearena/core vendor/github.com/bytearena/core
