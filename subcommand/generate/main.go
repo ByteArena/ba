@@ -1,7 +1,9 @@
 package generate
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path"
 
@@ -9,6 +11,7 @@ import (
 	bettererrors "github.com/xtuc/better-errors"
 
 	"github.com/bytearena/ba/subcommand/build"
+	"github.com/bytearena/core/common/types"
 )
 
 var (
@@ -51,13 +54,41 @@ func cloneRepo(dest, url string) (string, error) {
 	return "", nil
 }
 
+func generateManifestFile(manifest types.AgentManifest, dir string) error {
+	filename := types.GetManifestLocation(dir)
+	os.Remove(filename)
+
+	file, openErr := os.Create(filename)
+
+	defer file.Close()
+
+	if openErr != nil {
+		berror := bettererrors.
+			NewFromErr(openErr).
+			SetContext("Filename", filename)
+
+		return berror
+	}
+
+	bytes, _ := json.MarshalIndent(manifest, "", "    ")
+
+	_, writeErr := file.Write(bytes)
+
+	if writeErr != nil {
+		return bettererrors.NewFromErr(writeErr)
+	}
+
+	return nil
+}
+
 func Main(name string) (bool, error) {
 
 	if name == "" {
 		name = "unknown"
 	}
 
-	dest := petname.Generate(2, "-")
+	petname := petname.Generate(2, "-")
+	dest := petname
 
 	if url, hasSample := samples[name]; hasSample {
 		out, err := cloneRepo(dest, url)
@@ -76,6 +107,31 @@ func Main(name string) (bool, error) {
 	}
 
 	fmt.Println(dest, "has been created")
+
+	// Update manifest file
+	manifest, parseerror := types.ParseAgentManifestFromDir(dest)
+
+	if parseerror != nil {
+		berror := bettererrors.
+			New("Could not parse manifest").
+			With(parseerror)
+
+		return false, berror
+	}
+
+	manifest.Id = petname
+	manifest.Name = petname
+	manifest.RepoURL = ""
+
+	generationErr := generateManifestFile(manifest, dest)
+
+	if generationErr != nil {
+		berror := bettererrors.
+			New("Manifest generation error").
+			With(generationErr)
+
+		return false, berror
+	}
 
 	// Build agent
 	showUsage, err := build.Main(dest)
