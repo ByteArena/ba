@@ -55,7 +55,7 @@ do
 
     echo "Building $FILE release..."
 
-    env $i go build -o "$FILE" -ldflags="-s -w -X github.com/bytearena/ba/common/utils.version=$TAG"
+    env $i go build -o "$FILE" -ldflags="-s -w -X github.com/bytearena/ba/vendor/github.com/bytearena/core/common/utils.version=$TAG"
     upx -9 $FILE
     du -sh $FILE
 
