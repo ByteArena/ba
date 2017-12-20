@@ -38,3 +38,4 @@ import:
   version: 1.0.2
 - package: github.com/dustinkirkland/golang-petname
 - package: github.com/asaskevich/EventBus
+- package: github.com/bytearena/core
