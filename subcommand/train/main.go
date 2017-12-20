@@ -140,7 +140,7 @@ func TrainAction(
 			return DONT_SHOW_USAGE, err
 		}
 
-		agent := types.Agent{Manifest: agentManifest}
+		agent := &types.Agent{Manifest: agentManifest}
 
 		gamedescription.AddAgent(agent)
 		srv.RegisterAgent(agent)
@@ -221,7 +221,7 @@ func TrainAction(
 	// TODO(jerome): refac webclient path / serving
 
 	vizgames := make([]*viztypes.VizGame, 1)
-	vizgames[0] = viztypes.NewVizGame(gamedescription)
+	vizgames[0] = viztypes.NewVizGame(game, gamedescription)
 
 	vizservice := visualization.NewVizService(
 		"127.0.0.1:"+strconv.Itoa(vizport),

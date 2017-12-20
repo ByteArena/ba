@@ -13,7 +13,7 @@ import (
 
 type MockGame struct {
 	tps          int
-	agents       []types.Agent
+	agents       []*types.Agent
 	mapContainer *mapcontainer.MapContainer
 }
 
@@ -36,7 +36,7 @@ func NewMockGame(tps int, mapbundle *mappack.MappackInMemoryArchive) (*MockGame,
 
 	return &MockGame{
 		tps:          tps,
-		agents:       make([]types.Agent, 0),
+		agents:       make([]*types.Agent, 0),
 		mapContainer: &mapContainer,
 	}, nil
 }
@@ -65,11 +65,11 @@ func (game *MockGame) GetEndedAt() string {
 	return ""
 }
 
-func (game *MockGame) AddAgent(agent types.Agent) {
+func (game *MockGame) AddAgent(agent *types.Agent) {
 	game.agents = append(game.agents, agent)
 }
 
-func (game *MockGame) GetAgents() []types.Agent {
+func (game *MockGame) GetAgents() []*types.Agent {
 	return game.agents
 }
 
