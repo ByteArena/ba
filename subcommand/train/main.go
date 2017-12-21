@@ -55,6 +55,7 @@ func TrainAction(
 	tps int,
 	host string,
 	vizport int,
+	vizhost string,
 	nobrowser bool,
 	recordFile string,
 	agentimages []string,
@@ -224,7 +225,7 @@ func TrainAction(
 	vizgames[0] = viztypes.NewVizGame(game, gamedescription)
 
 	vizservice := visualization.NewVizService(
-		"127.0.0.1:"+strconv.Itoa(vizport),
+		vizhost+":"+strconv.Itoa(vizport),
 		mapName,
 		func() ([]*viztypes.VizGame, error) { return vizgames, nil },
 		recorder,
@@ -239,7 +240,7 @@ func TrainAction(
 		utils.FailWith(startErr)
 	}
 
-	url := "http://localhost:" + strconv.Itoa(vizport) + "/arena/1"
+	url := "http://" + vizhost + ":" + strconv.Itoa(vizport) + "/arena/1"
 
 	if !nobrowser {
 		open.Run(url)

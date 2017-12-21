@@ -86,6 +86,7 @@ func makeapp() *cli.App {
 				cli.StringFlag{Name: "host", Value: "", Usage: "IP serving the trainer; required"},
 				cli.StringSliceFlag{Name: "agent", Usage: "Agent images"},
 				cli.IntFlag{Name: "port", Value: 8080, Usage: "Port serving the trainer"},
+				cli.StringFlag{Name: "viz-host", Value: "127.0.0.1", Usage: "Specify a host for the visualization server"},
 				cli.StringFlag{Name: "record-file", Value: "", Usage: "Destination file for recording the game"},
 				cli.StringFlag{Name: "map", Value: "hexagon", Usage: "Name of the map used by the trainer"},
 				cli.BoolFlag{Name: "no-browser", Usage: "Disable automatic browser opening at start"},
@@ -99,6 +100,7 @@ func makeapp() *cli.App {
 				host := c.String("host")
 				agents := c.StringSlice("agent")
 				port := c.Int("port")
+				vizhost := c.String("viz-host")
 				recordFile := c.String("record-file")
 				mapName := c.String("map")
 				nobrowser := c.Bool("no-browser")
@@ -111,6 +113,7 @@ func makeapp() *cli.App {
 					tps,
 					host,
 					port,
+					vizhost,
 					nobrowser,
 					recordFile,
 					agents,
