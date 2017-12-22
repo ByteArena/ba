@@ -91,6 +91,7 @@ func makeapp() *cli.App {
 				cli.StringFlag{Name: "map", Value: "hexagon", Usage: "Name of the map used by the trainer"},
 				cli.BoolFlag{Name: "no-browser", Usage: "Disable automatic browser opening at start"},
 				cli.BoolFlag{Name: "debug", Usage: "Enable debug logging"},
+				cli.BoolFlag{Name: "quiet", Usage: "Decrease verbosity of the output"},
 				cli.BoolFlag{Name: "profile", Usage: "Enable execution profiling"},
 				cli.BoolFlag{Name: "dump-raw-comm", Usage: "Dump all the communication between the agent and the server"},
 				cli.IntFlag{Name: "duration", Usage: "If set, game will stop after this durarion (in seconds)"},
@@ -105,6 +106,7 @@ func makeapp() *cli.App {
 				mapName := c.String("map")
 				nobrowser := c.Bool("no-browser")
 				isDebug := c.Bool("debug")
+				isQuiet := c.Bool("quiet")
 				shouldProfile := c.Bool("profile")
 				dumpRaw := c.Bool("dump-raw-comm")
 				duration := c.Int("duration")
@@ -118,6 +120,7 @@ func makeapp() *cli.App {
 					recordFile,
 					agents,
 					isDebug,
+					isQuiet,
 					mapName,
 					shouldProfile,
 					dumpRaw,
