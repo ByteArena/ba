@@ -60,6 +60,7 @@ func TrainAction(
 	recordFile string,
 	agentimages []string,
 	isDebug bool,
+	isQuiet bool,
 	mapName string,
 	shouldProfile,
 	dumpRaw bool,
@@ -156,13 +157,17 @@ func TrainAction(
 
 			switch t := msg.(type) {
 			case arenaserver.EventStatusGameUpdate:
-				fmt.Printf(GameColor("[game] %s\n"), t.Status)
+				if !isQuiet {
+					fmt.Printf(GameColor("[game] %s\n"), t.Status)
+				}
 
 			case arenaserver.EventAgentLog:
 				fmt.Printf(AgentColor("[agent] %s\n"), t.Value)
 
 			case arenaserver.EventLog:
-				fmt.Printf(LogColor("[log] %s\n"), t.Value)
+				if !isQuiet {
+					fmt.Printf(LogColor("[log] %s\n"), t.Value)
+				}
 
 			case arenaserver.EventDebug:
 				debug(t.Value)
