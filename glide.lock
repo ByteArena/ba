@@ -1,5 +1,5 @@
-hash: a89fbed50ceadaa3b369ba9f7326618c1a328a0599586c55a8a661a46d887aec
-updated: 2017-12-20T09:52:20.676093923+01:00
+hash: b1d32a6ba9d9c268021769a9c0e74ceebaad06c62cb9279370683b7179216907
+updated: 2017-12-26T18:37:20.557848917+01:00
 imports:
 - name: github.com/asaskevich/EventBus
   version: 9223ecd796146991d8ffc3b822d5aa02f15aee97
@@ -121,6 +121,8 @@ imports:
   - buffer
   - jlexer
   - jwriter
+- name: github.com/Masterminds/semver
+  version: 15d8430ab86497c5c0da827b748823945e1cf1e1
 - name: github.com/mattn/go-colorable
   version: 5411d3eea5978e6cdc258b30de592b60df6aba96
   repo: https://github.com/mattn/go-colorable
