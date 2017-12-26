@@ -1,16 +1,20 @@
 package generate
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
 
+	"github.com/Masterminds/semver"
+	"github.com/docker/docker/client"
 	petname "github.com/dustinkirkland/golang-petname"
 	bettererrors "github.com/xtuc/better-errors"
 
 	"github.com/bytearena/ba/subcommand/build"
+	"github.com/bytearena/core/common/dockerfile"
 	"github.com/bytearena/core/common/types"
 )
 
@@ -133,6 +137,17 @@ func Main(name string) (bool, error) {
 		return false, berror
 	}
 
+	// assert Docker supports multistaged
+	assertErr := assertDockerSupportsMultiStageBuild(path.Join(dest, build.DOCKER_BUILD_FILE))
+
+	if assertErr != nil {
+		berror := bettererrors.
+			New("assert Docker version failed").
+			With(assertErr)
+
+		return false, berror
+	}
+
 	// Build agent
 	showUsage, err := build.Main(dest)
 
@@ -145,4 +160,52 @@ func Main(name string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func assertDockerSupportsMultiStageBuild(dockerfileLocation string) error {
+	reader, openErr := os.Open(dockerfileLocation)
+
+	if openErr != nil {
+		return bettererrors.NewFromErr(openErr)
+	}
+
+	froms, parseError := dockerfile.DockerfileParserGetFroms(reader)
+
+	if parseError != nil {
+		return bettererrors.NewFromErr(parseError)
+	}
+
+	// Abord here because it's not a multistage-build
+	if len(froms) == 1 {
+		return nil
+	}
+
+	cli, clientErr := client.NewEnvClient()
+
+	if clientErr != nil {
+		return bettererrors.NewFromErr(clientErr)
+	}
+
+	serverVersion, getVersionErr := cli.ServerVersion(context.Background())
+
+	if getVersionErr != nil {
+		return bettererrors.NewFromErr(getVersionErr)
+	}
+
+	expectedRange := ">=17.05.0-ce"
+	semverExpectedRange, _ := semver.NewConstraint(expectedRange)
+	current, cliVersionError := semver.NewVersion(serverVersion.Version)
+
+	if cliVersionError != nil {
+		return bettererrors.NewFromErr(cliVersionError)
+	}
+
+	if ok, _ := semverExpectedRange.Validate(current); !ok {
+		return bettererrors.
+			New("Invalid Docker version").
+			SetContext("expected", expectedRange).
+			SetContext("current", serverVersion.Version)
+	}
+
+	return nil
 }

@@ -39,3 +39,5 @@ import:
 - package: github.com/dustinkirkland/golang-petname
 - package: github.com/asaskevich/EventBus
 - package: github.com/bytearena/core
+- package: github.com/Masterminds/semver
+  version: v1.4.0
