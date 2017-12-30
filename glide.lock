@@ -12,7 +12,7 @@ imports:
 - name: github.com/bytearena/box2d
   version: 58acea7fee08a5fbb5a3a4c8f867205dd9826ae1
 - name: github.com/bytearena/core
-  version: f2cad4637aee04b60562c5af2aa1a0a84fd60934
+  version: ad7648833bf4caeecf6698cd2a6e01d7910df70b
   subpackages:
   - arenaserver
   - arenaserver/agent
