@@ -93,7 +93,6 @@ func makeapp() *cli.App {
 				cli.BoolFlag{Name: "debug", Usage: "Enable debug logging"},
 				cli.BoolFlag{Name: "quiet", Usage: "Decrease verbosity of the output"},
 				cli.BoolFlag{Name: "profile", Usage: "Enable execution profiling"},
-				cli.BoolFlag{Name: "watch", Usage: "Enable watch mode"},
 				cli.IntFlag{Name: "duration", Usage: "If set, game will stop after this durarion (in seconds)"},
 			},
 			Action: func(c *cli.Context) error {
@@ -110,7 +109,6 @@ func makeapp() *cli.App {
 					IsDebug:         c.Bool("debug"),
 					IsQuiet:         c.Bool("quiet"),
 					ShouldProfile:   c.Bool("profile"),
-					WatchMode:       c.Bool("watch"),
 					DurationSeconds: c.Int("duration"),
 				}
 

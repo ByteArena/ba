@@ -61,7 +61,6 @@ type TrainActionArguments struct {
 	Agentimages     []string
 	IsDebug         bool
 	IsQuiet         bool
-	WatchMode       bool
 	MapName         string
 	ShouldProfile   bool
 	DurationSeconds int
