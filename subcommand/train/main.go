@@ -63,7 +63,6 @@ type TrainActionArguments struct {
 	IsQuiet         bool
 	MapName         string
 	ShouldProfile   bool
-	DumpRaw         bool
 	DurationSeconds int
 }
 
@@ -136,6 +135,7 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		arenaServerUUID,
 		brokerclient,
 		gameDuration,
+		args.IsDebug,
 	)
 
 	for _, dockerImageName := range args.Agentimages {
@@ -184,8 +184,8 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 				fmt.Printf(HeadsUpColor("[headsup] %s\n"), t.Value)
 
 			case arenaserver.EventRawComm:
-				if args.DumpRaw {
-					fmt.Printf(AgentColor("[agent] %s\n"), t.Value)
+				if args.IsDebug {
+					fmt.Printf(DebugColor("[debug from: %s] %s\n"), t.From, t.Value)
 				}
 
 			case arenaserver.EventClose:
