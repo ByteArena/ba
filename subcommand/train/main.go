@@ -51,23 +51,25 @@ const (
 	TIME_BEFORE_FORCE_QUIT = 5 * time.Second
 )
 
-func TrainAction(
-	tps int,
-	host string,
-	vizport int,
-	vizhost string,
-	nobrowser bool,
-	recordFile string,
-	agentimages []string,
-	isDebug bool,
-	isQuiet bool,
-	mapName string,
-	shouldProfile,
-	dumpRaw bool,
-	durationSeconds int,
-) (bool, error) {
+type TrainActionArguments struct {
+	Tps             int
+	Host            string
+	Vizport         int
+	Vizhost         string
+	Nobrowser       bool
+	RecordFile      string
+	Agentimages     []string
+	IsDebug         bool
+	IsQuiet         bool
+	MapName         string
+	ShouldProfile   bool
+	DumpRaw         bool
+	DurationSeconds int
+}
 
-	if shouldProfile {
+func TrainAction(args TrainActionArguments) (bool, error) {
+
+	if args.ShouldProfile {
 		f, err := os.Create("./cpu.prof")
 		if err != nil {
 			log.Fatal("could not create CPU profile: ", err)
@@ -80,27 +82,27 @@ func TrainAction(
 
 	var gameDuration *time.Duration
 
-	if durationSeconds > 0 {
-		d := time.Duration(durationSeconds) * time.Second
+	if args.DurationSeconds > 0 {
+		d := time.Duration(args.DurationSeconds) * time.Second
 		gameDuration = &d
 	}
 
 	shutdownChan := make(chan bool)
 	debug := func(str string) {}
 
-	if isDebug {
+	if args.IsDebug {
 		debug = func(str string) {
 			fmt.Printf(DebugColor("[debug] %s\n"), str)
 		}
 	}
 
-	if host == "" {
+	if args.Host == "" {
 		ip, err := utils.GetCurrentIP()
 		utils.Check(err, "Could not determine host IP; you can specify using the `--host` flag.")
-		host = ip
+		args.Host = ip
 	}
 
-	if len(agentimages) == 0 {
+	if len(args.Agentimages) == 0 {
 		return SHOW_USAGE, bettererrors.New("No agents were specified")
 	}
 
@@ -110,24 +112,24 @@ func TrainAction(
 	brokerclient, err := NewMemoryMessageClient()
 	utils.Check(err, "ERROR: Could not connect to messagebroker")
 
-	mappack, errMappack := mappack.UnzipAndGetHandles(mapcmd.GetMapLocation(mapName))
+	mappack, errMappack := mappack.UnzipAndGetHandles(mapcmd.GetMapLocation(args.MapName))
 	if errMappack != nil {
 		utils.FailWith(errMappack)
 	}
 
-	gamedescription, err := NewMockGame(tps, mappack)
+	gamedescription, err := NewMockGame(args.Tps, mappack)
 	if err != nil {
 		utils.FailWith(err)
 	}
 
 	game := deathmatch.NewDeathmatchGame(gamedescription)
 
-	orchestrator := container.MakeLocalContainerOrchestrator(host)
+	orchestrator := container.MakeLocalContainerOrchestrator(args.Host)
 
 	arenaServerUUID := ""
 
 	srv := arenaserver.NewServer(
-		host,
+		args.Host,
 		orchestrator,
 		gamedescription,
 		game,
@@ -136,7 +138,7 @@ func TrainAction(
 		gameDuration,
 	)
 
-	for _, dockerImageName := range agentimages {
+	for _, dockerImageName := range args.Agentimages {
 		agentManifest, err := types.GetAgentManifestByDockerImageName(dockerImageName, orchestrator)
 		if err != nil {
 			return DONT_SHOW_USAGE, err
@@ -157,7 +159,7 @@ func TrainAction(
 
 			switch t := msg.(type) {
 			case arenaserver.EventStatusGameUpdate:
-				if !isQuiet {
+				if !args.IsQuiet {
 					fmt.Printf(GameColor("[game] %s\n"), t.Status)
 				}
 
@@ -165,7 +167,7 @@ func TrainAction(
 				fmt.Printf(AgentColor("[agent] %s\n"), t.Value)
 
 			case arenaserver.EventLog:
-				if !isQuiet {
+				if !args.IsQuiet {
 					fmt.Printf(LogColor("[log] %s\n"), t.Value)
 				}
 
@@ -182,7 +184,7 @@ func TrainAction(
 				fmt.Printf(HeadsUpColor("[headsup] %s\n"), t.Value)
 
 			case arenaserver.EventRawComm:
-				if dumpRaw {
+				if args.DumpRaw {
 					fmt.Printf(AgentColor("[agent] %s\n"), t.Value)
 				}
 
@@ -211,8 +213,8 @@ func TrainAction(
 	go common.StreamState(srv, brokerclient, "trainer")
 
 	var recorder recording.RecorderInterface = recording.MakeEmptyRecorder()
-	if recordFile != "" {
-		recorder = recording.MakeSingleArenaRecorder(recordFile)
+	if args.RecordFile != "" {
+		recorder = recording.MakeSingleArenaRecorder(args.RecordFile)
 	}
 
 	recorder.RecordMetadata(gamedescription.GetId(), gamedescription.GetMapContainer())
@@ -230,8 +232,8 @@ func TrainAction(
 	vizgames[0] = viztypes.NewVizGame(game, gamedescription)
 
 	vizservice := visualization.NewVizService(
-		vizhost+":"+strconv.Itoa(vizport),
-		mapName,
+		args.Vizhost+":"+strconv.Itoa(args.Vizport),
+		args.MapName,
 		func() ([]*viztypes.VizGame, error) { return vizgames, nil },
 		recorder,
 		mappack,
@@ -245,9 +247,9 @@ func TrainAction(
 		utils.FailWith(startErr)
 	}
 
-	url := "http://" + vizhost + ":" + strconv.Itoa(vizport) + "/arena/1"
+	url := "http://" + args.Vizhost + ":" + strconv.Itoa(args.Vizport) + "/arena/1"
 
-	if !nobrowser {
+	if !args.Nobrowser {
 		open.Run(url)
 	}
 

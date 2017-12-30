@@ -97,35 +97,24 @@ func makeapp() *cli.App {
 				cli.IntFlag{Name: "duration", Usage: "If set, game will stop after this durarion (in seconds)"},
 			},
 			Action: func(c *cli.Context) error {
-				tps := c.Int("tps")
-				host := c.String("host")
-				agents := c.StringSlice("agent")
-				port := c.Int("port")
-				vizhost := c.String("viz-host")
-				recordFile := c.String("record-file")
-				mapName := c.String("map")
-				nobrowser := c.Bool("no-browser")
-				isDebug := c.Bool("debug")
-				isQuiet := c.Bool("quiet")
-				shouldProfile := c.Bool("profile")
-				dumpRaw := c.Bool("dump-raw-comm")
-				duration := c.Int("duration")
 
-				showUsage, err := train.TrainAction(
-					tps,
-					host,
-					port,
-					vizhost,
-					nobrowser,
-					recordFile,
-					agents,
-					isDebug,
-					isQuiet,
-					mapName,
-					shouldProfile,
-					dumpRaw,
-					duration,
-				)
+				args := train.TrainActionArguments{
+					Tps:             c.Int("tps"),
+					Host:            c.String("host"),
+					Agentimages:     c.StringSlice("agent"),
+					Vizport:         c.Int("port"),
+					Vizhost:         c.String("viz-host"),
+					RecordFile:      c.String("record-file"),
+					MapName:         c.String("map"),
+					Nobrowser:       c.Bool("no-browser"),
+					IsDebug:         c.Bool("debug"),
+					IsQuiet:         c.Bool("quiet"),
+					ShouldProfile:   c.Bool("profile"),
+					DumpRaw:         c.Bool("dump-raw-comm"),
+					DurationSeconds: c.Int("duration"),
+				}
+
+				showUsage, err := train.TrainAction(args)
 
 				if err != nil {
 					commandFailWith("train", showUsage, c, err)
