@@ -16,24 +16,19 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"github.com/fsnotify/fsnotify"
 
 	bettererrors "github.com/xtuc/better-errors"
 
+	"github.com/bytearena/ba/watcher"
 	"github.com/bytearena/core/common/dockerfile"
 	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/utils"
 )
 
-var (
+const (
 	DOCKER_BUILD_FILE = "Dockerfile"
 	SHOW_USAGE        = true
 	DONT_SHOW_USAGE   = false
-
-	WATCH_DIR_RECURSION_DEPTH = uint(100)
-	WATCH_IGNORE_DIRS         = map[string]bool{
-		".git": true,
-	}
 )
 
 type Arguments struct {
@@ -160,7 +155,7 @@ func Main(dir string, args Arguments) (bool, error) {
 
 	if args.WatchMode {
 
-		watcher, err := fsnotify.NewWatcher()
+		watcher, err := watcher.MakeWatcher()
 
 		if err != nil {
 			return DONT_SHOW_USAGE, bettererrors.NewFromErr(err)
@@ -168,8 +163,7 @@ func Main(dir string, args Arguments) (bool, error) {
 
 		defer watcher.Close()
 
-		waitChan := make(chan error, 1)
-		awaitChangementIn(watcher, dir, waitChan)
+		watcher.Add(dir)
 
 		for {
 			fmt.Println("=== Building your agent now.")
@@ -185,7 +179,7 @@ func Main(dir string, args Arguments) (bool, error) {
 
 			fmt.Printf("Awaiting changes in %s ...\n", dir)
 
-			err = <-waitChan
+			err = <-watcher.Wait()
 
 			if err != nil {
 				return DONT_SHOW_USAGE, err
@@ -366,82 +360,6 @@ func failForbiddenInstructions(content []byte) error {
 			SetContext("name", name.String())
 
 		utils.FailWith(berror)
-	}
-
-	return nil
-}
-
-func awaitChangementIn(watcher *fsnotify.Watcher, dir string, waitChan chan error) chan error {
-
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-
-				if event.Op&fsnotify.Write == fsnotify.Write ||
-					event.Op&fsnotify.Create == fsnotify.Create ||
-					event.Op&fsnotify.Remove == fsnotify.Remove {
-
-					select {
-					case waitChan <- nil: // ok
-					default:
-						fmt.Println("Already building ignoring")
-					}
-				}
-			case err := <-watcher.Errors:
-				waitChan <- bettererrors.NewFromErr(err)
-				return
-			}
-		}
-	}()
-
-	err := watcher.Add(dir)
-
-	if err != nil {
-		waitChan <- bettererrors.NewFromErr(err)
-		return waitChan
-	}
-
-	err = addDirWatchers(watcher, dir, 0)
-
-	if err != nil {
-		waitChan <- err
-		return waitChan
-	}
-
-	return waitChan
-}
-
-func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
-	files, err := ioutil.ReadDir(dir)
-
-	if err != nil {
-		return bettererrors.NewFromErr(err)
-	}
-
-	for _, file := range files {
-
-		if file.IsDir() {
-			if _, isIgnored := WATCH_IGNORE_DIRS[file.Name()]; isIgnored {
-				return nil
-			}
-
-			absName := path.Join(dir, file.Name())
-
-			err := watcher.Add(absName)
-
-			if err != nil {
-				return bettererrors.NewFromErr(err)
-			}
-
-			if detph < WATCH_DIR_RECURSION_DEPTH {
-				err := addDirWatchers(watcher, absName, detph+1)
-
-				if err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	return nil
