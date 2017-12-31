@@ -25,12 +25,15 @@ import (
 	"github.com/bytearena/core/common/utils"
 )
 
-const (
+var (
 	DOCKER_BUILD_FILE = "Dockerfile"
 	SHOW_USAGE        = true
 	DONT_SHOW_USAGE   = false
 
-	WATCH_DIR_RECURSION_DEPTH = 100
+	WATCH_DIR_RECURSION_DEPTH = uint(100)
+	WATCH_IGNORE_DIRS         = map[string]bool{
+		".git": true,
+	}
 )
 
 type Arguments struct {
@@ -417,7 +420,12 @@ func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
 	}
 
 	for _, file := range files {
+
 		if file.IsDir() {
+			if _, isIgnored := WATCH_IGNORE_DIRS[file.Name()]; isIgnored {
+				return nil
+			}
+
 			absName := path.Join(dir, file.Name())
 
 			err := watcher.Add(absName)
