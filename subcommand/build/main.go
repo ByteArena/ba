@@ -375,7 +375,10 @@ func awaitChangementIn(watcher *fsnotify.Watcher, dir string, waitChan chan erro
 			select {
 			case event := <-watcher.Events:
 
-				if event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Op&fsnotify.Write == fsnotify.Write ||
+					event.Op&fsnotify.Create == fsnotify.Create ||
+					event.Op&fsnotify.Remove == fsnotify.Remove {
+
 					select {
 					case waitChan <- nil: // ok
 					default:
