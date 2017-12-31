@@ -379,7 +379,7 @@ func awaitChangementIn(watcher *fsnotify.Watcher, dir string, waitChan chan erro
 					select {
 					case waitChan <- nil: // ok
 					default:
-						fmt.Println("Already buildig ignoring")
+						fmt.Println("Already building ignoring")
 					}
 				}
 			case err := <-watcher.Errors:
