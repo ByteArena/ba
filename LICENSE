@@ -24,6 +24,7 @@ gopkg.in/mattn/go-colorable.v0                      https://github.com/mattn/go-
 gopkg.in/mattn/go-isatty.v0                         https://github.com/mattn/go-isatty/blob/v0.0.3/LICENSE
 gopkg.in/mattn/go-runewidth.v0                      https://github.com/mattn/go-runewidth/blob/v0.0.2/LICENSE
 github.com/Masterminds/semver                       https://github.com/Masterminds/semver/blob/v1.4.0/LICENSE.txt
+github.com/fsnotify/fsnotify                        https://github.com/fsnotify/fsnotify/blob/master/LICENSE
 
 Apache License
 

@@ -35,6 +35,9 @@ func makeapp() *cli.App {
 		{
 			Name:  "build",
 			Usage: "Build an agent",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "watch", Usage: "Enable watch mode"},
+			},
 			BashComplete: func(c *cli.Context) {
 				completion, err := build.BashComplete(c.Args().Get(0))
 
@@ -45,7 +48,11 @@ func makeapp() *cli.App {
 				fmt.Fprintln(c.App.Writer, completion)
 			},
 			Action: func(c *cli.Context) error {
-				showUsage, err := build.Main(c.Args().Get(0))
+				args := build.Arguments{
+					WatchMode: c.Bool("watch"),
+				}
+
+				showUsage, err := build.Main(c.Args().Get(0), args)
 
 				if err != nil {
 					commandFailWith("build", showUsage, c, err)
@@ -93,7 +100,7 @@ func makeapp() *cli.App {
 				cli.BoolFlag{Name: "debug", Usage: "Enable debug logging"},
 				cli.BoolFlag{Name: "quiet", Usage: "Decrease verbosity of the output"},
 				cli.BoolFlag{Name: "profile", Usage: "Enable execution profiling"},
-				cli.BoolFlag{Name: "dump-raw-comm", Usage: "Dump all the communication between the agent and the server"},
+				cli.BoolFlag{Name: "watch", Usage: "Enable watch mode"},
 				cli.IntFlag{Name: "duration", Usage: "If set, game will stop after this durarion (in seconds)"},
 			},
 			Action: func(c *cli.Context) error {
@@ -110,7 +117,7 @@ func makeapp() *cli.App {
 					IsDebug:         c.Bool("debug"),
 					IsQuiet:         c.Bool("quiet"),
 					ShouldProfile:   c.Bool("profile"),
-					DumpRaw:         c.Bool("dump-raw-comm"),
+					WatchMode:       c.Bool("watch"),
 					DurationSeconds: c.Int("duration"),
 				}
 

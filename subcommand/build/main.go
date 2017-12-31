@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	"github.com/fsnotify/fsnotify"
 
 	bettererrors "github.com/xtuc/better-errors"
 
@@ -28,7 +29,13 @@ const (
 	DOCKER_BUILD_FILE = "Dockerfile"
 	SHOW_USAGE        = true
 	DONT_SHOW_USAGE   = false
+
+	WATCH_DIR_RECURSION_DEPTH = 100
 )
+
+type Arguments struct {
+	WatchMode bool
+}
 
 type ImageLabels map[string]string
 
@@ -90,7 +97,7 @@ func BashComplete(dir string) (string, error) {
 	return out, nil
 }
 
-func Main(dir string) (bool, error) {
+func Main(dir string, args Arguments) (bool, error) {
 
 	if dir == "" {
 
@@ -142,22 +149,60 @@ func Main(dir string) (bool, error) {
 
 	welcomeBanner()
 
-	fmt.Println("=== Building your agent now.")
-	fmt.Println("")
-
 	id := agentManifest.Id
 
 	labels := map[string]string{
 		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.String(),
 	}
 
-	err = runDockerBuild(cli, id, dir, labels)
+	if args.WatchMode {
 
-	if err != nil {
-		return DONT_SHOW_USAGE, err
+		watcher, err := fsnotify.NewWatcher()
+
+		if err != nil {
+			return DONT_SHOW_USAGE, bettererrors.NewFromErr(err)
+		}
+
+		defer watcher.Close()
+
+		waitChan := make(chan error, 1)
+		awaitChangementIn(watcher, dir, waitChan)
+
+		for {
+			fmt.Println("=== Building your agent now.")
+			fmt.Println("")
+
+			err = runDockerBuild(cli, id, dir, labels)
+
+			if err != nil {
+				return DONT_SHOW_USAGE, err
+			}
+
+			successBanner(id)
+
+			fmt.Printf("Awaiting changements in %s ...\n", dir)
+
+			err = <-waitChan
+
+			if err != nil {
+				return DONT_SHOW_USAGE, err
+			}
+		}
+
+	} else {
+
+		fmt.Println("=== Building your agent now.")
+		fmt.Println("")
+
+		err = runDockerBuild(cli, id, dir, labels)
+
+		if err != nil {
+			return DONT_SHOW_USAGE, err
+		}
+
+		successBanner(id)
+
 	}
-
-	successBanner(id)
 
 	return DONT_SHOW_USAGE, nil
 }
@@ -318,6 +363,74 @@ func failForbiddenInstructions(content []byte) error {
 			SetContext("name", name.String())
 
 		utils.FailWith(berror)
+	}
+
+	return nil
+}
+
+func awaitChangementIn(watcher *fsnotify.Watcher, dir string, waitChan chan error) chan error {
+
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					select {
+					case waitChan <- nil: // ok
+					default:
+						fmt.Println("Already buildig ignoring")
+					}
+				}
+			case err := <-watcher.Errors:
+				waitChan <- bettererrors.NewFromErr(err)
+				return
+			}
+		}
+	}()
+
+	err := watcher.Add(dir)
+
+	if err != nil {
+		waitChan <- bettererrors.NewFromErr(err)
+		return waitChan
+	}
+
+	err = addDirWatchers(watcher, dir, 0)
+
+	if err != nil {
+		waitChan <- err
+		return waitChan
+	}
+
+	return waitChan
+}
+
+func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
+	files, err := ioutil.ReadDir(dir)
+
+	if err != nil {
+		return bettererrors.NewFromErr(err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			absName := path.Join(dir, file.Name())
+
+			err := watcher.Add(absName)
+
+			if err != nil {
+				return bettererrors.NewFromErr(err)
+			}
+
+			if detph < WATCH_DIR_RECURSION_DEPTH {
+				err := addDirWatchers(watcher, absName, detph+1)
+
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

@@ -149,7 +149,7 @@ func Main(name string) (bool, error) {
 	}
 
 	// Build agent
-	showUsage, err := build.Main(dest)
+	showUsage, err := build.Main(dest, build.Arguments{})
 
 	if err != nil {
 		berror := bettererrors.
