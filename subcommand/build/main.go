@@ -180,7 +180,7 @@ func Main(dir string, args Arguments) (bool, error) {
 
 			successBanner(id)
 
-			fmt.Printf("Awaiting changements in %s ...\n", dir)
+			fmt.Printf("Awaiting changes in %s ...\n", dir)
 
 			err = <-waitChan
 
