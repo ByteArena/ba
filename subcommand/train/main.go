@@ -149,6 +149,34 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 
 		gamedescription.AddAgent(agent)
 		srv.RegisterAgent(agent)
+
+		// Test
+		if args.WatchMode == true {
+
+			go func() {
+				for {
+					// Fake changes in dir for now
+					<-time.After(3 * time.Second)
+
+					srv.Pause()
+
+					err := srv.ReloadAgent(agent)
+
+					if err != nil {
+						berror := bettererrors.
+							New("Could not reload agent").
+							With(err)
+
+						utils.FailWith(berror)
+						return
+					}
+
+					srv.Unpause()
+
+					break
+				}
+			}()
+		}
 	}
 
 	// consume server events
