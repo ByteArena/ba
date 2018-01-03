@@ -29,6 +29,7 @@ import (
 	viztypes "github.com/bytearena/core/common/visualization/types"
 	"github.com/bytearena/core/game/deathmatch"
 
+	"github.com/bytearena/ba/subcommand/build"
 	mapcmd "github.com/bytearena/ba/subcommand/map"
 )
 
@@ -52,19 +53,28 @@ const (
 )
 
 type TrainActionArguments struct {
-	Tps             int
-	Host            string
-	Vizport         int
-	Vizhost         string
-	Nobrowser       bool
-	RecordFile      string
-	Agentimages     []string
-	IsDebug         bool
-	IsQuiet         bool
-	WatchMode       bool
-	MapName         string
-	ShouldProfile   bool
-	DurationSeconds int
+	Tps                int
+	Host               string
+	Vizport            int
+	Vizhost            string
+	Nobrowser          bool
+	RecordFile         string
+	Agentimages        []string
+	WatchedAgentimages []string
+	IsDebug            bool
+	IsQuiet            bool
+	MapName            string
+	ShouldProfile      bool
+	DurationSeconds    int
+}
+
+func stringInStringSlice(l string, list []string) bool {
+	for _, r := range list {
+		if l == r {
+			return true
+		}
+	}
+	return false
 }
 
 func TrainAction(args TrainActionArguments) (bool, error) {
@@ -102,7 +112,7 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		args.Host = ip
 	}
 
-	if len(args.Agentimages) == 0 {
+	if len(args.Agentimages) == 0 && len(args.WatchedAgentimages) == 0 {
 		return SHOW_USAGE, bettererrors.New("No agents were specified")
 	}
 
@@ -139,6 +149,7 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		args.IsDebug,
 	)
 
+	// Regular agents
 	for _, dockerImageName := range args.Agentimages {
 		agentManifest, err := types.GetAgentManifestByDockerImageName(dockerImageName, orchestrator)
 		if err != nil {
@@ -148,35 +159,68 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		agent := &types.Agent{Manifest: agentManifest}
 
 		gamedescription.AddAgent(agent)
-		srv.RegisterAgent(agent)
+		srv.RegisterAgent(agent, nil)
+	}
 
-		// Test
-		if args.WatchMode == true {
+	// Watched agents
+	for _, agentPath := range args.WatchedAgentimages {
 
-			go func() {
-				for {
-					// Fake changes in dir for now
-					<-time.After(3 * time.Second)
+		go func() {
+			args := build.Arguments{
+				WatchMode: true,
+			}
 
-					srv.Pause()
+			_, buildErr := build.Main(agentPath, args)
 
-					err := srv.ReloadAgent(agent)
+			if buildErr != nil {
+				berror := bettererrors.
+					New("Failed to build agent").
+					With(buildErr)
 
-					if err != nil {
-						berror := bettererrors.
-							New("Could not reload agent").
-							With(err)
+				utils.FailWith(berror)
+			}
+		}()
 
-						utils.FailWith(berror)
-						return
-					}
+		<-time.After(3 * time.Second)
 
-					srv.Unpause()
+		// Get image name from agent manifest file
+		agentManifest, parseManifestError := types.ParseAgentManifestFromDir(agentPath)
 
-					break
-				}
-			}()
+		if parseManifestError != nil {
+			return DONT_SHOW_USAGE, bettererrors.
+				New("Could not parse manifest").
+				With(parseManifestError)
 		}
+
+		dockerImageName := agentManifest.Id
+
+		agentManifest, err := types.GetAgentManifestByDockerImageName(dockerImageName, orchestrator)
+		if err != nil {
+			return DONT_SHOW_USAGE, err
+		}
+
+		agent := &types.Agent{Manifest: agentManifest}
+
+		gamedescription.AddAgent(agent)
+		srv.RegisterAgent(agent, nil)
+
+		go func() {
+			for {
+				// Fake changes in dir for now
+				<-time.After(5 * time.Second)
+
+				err := srv.ReloadAgent(agent)
+
+				if err != nil {
+					berror := bettererrors.
+						New("Could not reload agent").
+						With(err)
+
+					utils.FailWith(berror)
+					return
+				}
+			}
+		}()
 	}
 
 	// consume server events
