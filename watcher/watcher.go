@@ -77,7 +77,7 @@ func (w Watcher) Close() error {
 	return w.fsnotifyWatcher.Close()
 }
 
-func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
+func addDirWatchers(watcher *fsnotify.Watcher, dir string, depth uint) error {
 	files, err := ioutil.ReadDir(dir)
 
 	if err != nil {
@@ -87,8 +87,9 @@ func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
 	for _, file := range files {
 
 		if file.IsDir() {
+
 			if _, isIgnored := WATCH_IGNORE_DIRS[file.Name()]; isIgnored {
-				return nil
+				continue
 			}
 
 			absName := path.Join(dir, file.Name())
@@ -99,8 +100,8 @@ func addDirWatchers(watcher *fsnotify.Watcher, dir string, detph uint) error {
 				return bettererrors.NewFromErr(err)
 			}
 
-			if detph < WATCH_DIR_RECURSION_DEPTH {
-				err := addDirWatchers(watcher, absName, detph+1)
+			if depth < WATCH_DIR_RECURSION_DEPTH {
+				err := addDirWatchers(watcher, absName, depth+1)
 
 				if err != nil {
 					return err
