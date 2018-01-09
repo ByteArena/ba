@@ -33,6 +33,14 @@ func makeapp() *cli.App {
 
 	app.Commands = []cli.Command{
 		{
+			Name:  "version",
+			Usage: "Display ba version",
+			Action: func(c *cli.Context) error {
+				fmt.Println("Byte Arena cli tool", app.Version)
+				return nil
+			},
+		},
+		{
 			Name:  "build",
 			Usage: "Build an agent",
 			BashComplete: func(c *cli.Context) {
