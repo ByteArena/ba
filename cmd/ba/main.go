@@ -43,6 +43,9 @@ func makeapp() *cli.App {
 		{
 			Name:  "build",
 			Usage: "Build an agent",
+			Flags: []cli.Flag{
+				cli.BoolFlag{Name: "watch", Usage: "Enable watch mode"},
+			},
 			BashComplete: func(c *cli.Context) {
 				completion, err := build.BashComplete(c.Args().Get(0))
 
@@ -53,7 +56,11 @@ func makeapp() *cli.App {
 				fmt.Fprintln(c.App.Writer, completion)
 			},
 			Action: func(c *cli.Context) error {
-				showUsage, err := build.Main(c.Args().Get(0))
+				args := build.Arguments{
+					WatchMode: c.Bool("watch"),
+				}
+
+				showUsage, err := build.Main(c.Args().Get(0), args)
 
 				if err != nil {
 					commandFailWith("build", showUsage, c, err)
@@ -93,6 +100,7 @@ func makeapp() *cli.App {
 				cli.IntFlag{Name: "tps", Value: 20, Usage: "Number of ticks per second"},
 				cli.StringFlag{Name: "host", Value: "", Usage: "IP serving the trainer; required"},
 				cli.StringSliceFlag{Name: "agent", Usage: "Agent images"},
+				cli.StringSliceFlag{Name: "watch", Usage: "Agent paths (with automatic rebuild)"},
 				cli.IntFlag{Name: "port", Value: 8080, Usage: "Port serving the trainer"},
 				cli.StringFlag{Name: "viz-host", Value: "127.0.0.1", Usage: "Specify a host for the visualization server"},
 				cli.StringFlag{Name: "record-file", Value: "", Usage: "Destination file for recording the game"},
@@ -106,18 +114,19 @@ func makeapp() *cli.App {
 			Action: func(c *cli.Context) error {
 
 				args := train.TrainActionArguments{
-					Tps:             c.Int("tps"),
-					Host:            c.String("host"),
-					Agentimages:     c.StringSlice("agent"),
-					Vizport:         c.Int("port"),
-					Vizhost:         c.String("viz-host"),
-					RecordFile:      c.String("record-file"),
-					MapName:         c.String("map"),
-					Nobrowser:       c.Bool("no-browser"),
-					IsDebug:         c.Bool("debug"),
-					IsQuiet:         c.Bool("quiet"),
-					ShouldProfile:   c.Bool("profile"),
-					DurationSeconds: c.Int("duration"),
+					Tps:                c.Int("tps"),
+					Host:               c.String("host"),
+					Agentimages:        c.StringSlice("agent"),
+					WatchedAgentimages: c.StringSlice("watch"),
+					Vizport:            c.Int("port"),
+					Vizhost:            c.String("viz-host"),
+					RecordFile:         c.String("record-file"),
+					MapName:            c.String("map"),
+					Nobrowser:          c.Bool("no-browser"),
+					IsDebug:            c.Bool("debug"),
+					IsQuiet:            c.Bool("quiet"),
+					ShouldProfile:      c.Bool("profile"),
+					DurationSeconds:    c.Int("duration"),
 				}
 
 				showUsage, err := train.TrainAction(args)

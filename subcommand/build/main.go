@@ -19,6 +19,7 @@ import (
 
 	bettererrors "github.com/xtuc/better-errors"
 
+	"github.com/bytearena/ba/watcher"
 	"github.com/bytearena/core/common/dockerfile"
 	"github.com/bytearena/core/common/types"
 	"github.com/bytearena/core/common/utils"
@@ -29,6 +30,10 @@ const (
 	SHOW_USAGE        = true
 	DONT_SHOW_USAGE   = false
 )
+
+type Arguments struct {
+	WatchMode bool
+}
 
 type ImageLabels map[string]string
 
@@ -90,7 +95,7 @@ func BashComplete(dir string) (string, error) {
 	return out, nil
 }
 
-func Main(dir string) (bool, error) {
+func Main(dir string, args Arguments) (bool, error) {
 
 	if dir == "" {
 
@@ -142,22 +147,59 @@ func Main(dir string) (bool, error) {
 
 	welcomeBanner()
 
-	fmt.Println("=== Building your agent now.")
-	fmt.Println("")
-
 	id := agentManifest.Id
 
 	labels := map[string]string{
 		types.AGENT_MANIFEST_LABEL_KEY: agentManifest.String(),
 	}
 
-	err = runDockerBuild(cli, id, dir, labels)
+	if args.WatchMode {
 
-	if err != nil {
-		return DONT_SHOW_USAGE, err
+		watcher, err := watcher.MakeWatcher()
+
+		if err != nil {
+			return DONT_SHOW_USAGE, bettererrors.NewFromErr(err)
+		}
+
+		defer watcher.Close()
+
+		watcher.Add(dir)
+
+		for {
+			fmt.Println("=== Building your agent now.")
+			fmt.Println("")
+
+			err = runDockerBuild(cli, id, dir, labels)
+
+			if err != nil {
+				return DONT_SHOW_USAGE, err
+			}
+
+			successBanner(id)
+
+			fmt.Printf("Awaiting changes in %s ...\n", dir)
+
+			err = <-watcher.Wait()
+
+			if err != nil {
+				return DONT_SHOW_USAGE, err
+			}
+		}
+
+	} else {
+
+		fmt.Println("=== Building your agent now.")
+		fmt.Println("")
+
+		err = runDockerBuild(cli, id, dir, labels)
+
+		if err != nil {
+			return DONT_SHOW_USAGE, err
+		}
+
+		successBanner(id)
+
 	}
-
-	successBanner(id)
 
 	return DONT_SHOW_USAGE, nil
 }

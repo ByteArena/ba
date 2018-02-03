@@ -1,5 +1,5 @@
-hash: b1d32a6ba9d9c268021769a9c0e74ceebaad06c62cb9279370683b7179216907
-updated: 2017-12-26T18:37:20.557848917+01:00
+hash: fe117edd1b4b60f03c56fa8053b85d22968e8432b677b22684236b2187755fb4
+updated: 2017-12-31T15:00:54.394514803+01:00
 imports:
 - name: github.com/asaskevich/EventBus
   version: 9223ecd796146991d8ffc3b822d5aa02f15aee97
@@ -97,6 +97,8 @@ imports:
   version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
 - name: github.com/dustinkirkland/golang-petname
   version: d3c2ba80e75eeef10c5cf2fc76d2c809637376b3
+- name: github.com/fsnotify/fsnotify
+  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/go-gl/mathgl
   version: 4c3fc6b4bf30179013667e5d0b926e024d9a13c1
   subpackages:
