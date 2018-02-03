@@ -192,7 +192,6 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		agent := &types.Agent{Manifest: agentManifest}
 
 		gamedescription.AddAgent(agent)
-
 		srv.RegisterAgent(agent, nil)
 
 		go func() {
@@ -201,6 +200,13 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 			watcher.Add(agentPath)
 
 			for {
+				watcherErr := <-watcher.Wait()
+
+				if watcherErr != nil {
+					utils.FailWith(watcherErr)
+					return
+				}
+
 				_, buildErr := build.Main(agentPath, build.Arguments{})
 
 				if buildErr != nil {
@@ -213,11 +219,6 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 
 				fmt.Printf("Awaiting changes in %s ...\n", agentPath)
 
-				if err != nil {
-					utils.FailWith(err)
-					return
-				}
-
 				reloadErr := srv.ReloadAgent(agent)
 
 				if reloadErr != nil {
@@ -228,8 +229,6 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 					utils.FailWith(berror)
 					return
 				}
-
-				err = <-watcher.Wait()
 			}
 		}()
 	}
