@@ -1,5 +1,5 @@
 hash: fe117edd1b4b60f03c56fa8053b85d22968e8432b677b22684236b2187755fb4
-updated: 2017-12-31T15:00:54.394514803+01:00
+updated: 2018-02-03T18:22:29.373054374+01:00
 imports:
 - name: github.com/asaskevich/EventBus
   version: 9223ecd796146991d8ffc3b822d5aa02f15aee97
@@ -12,7 +12,7 @@ imports:
 - name: github.com/bytearena/box2d
   version: 58acea7fee08a5fbb5a3a4c8f867205dd9826ae1
 - name: github.com/bytearena/core
-  version: ad7648833bf4caeecf6698cd2a6e01d7910df70b
+  version: 8a6ed75b475dcf968e0f12d579e5eb0eb11a7e91
   subpackages:
   - arenaserver
   - arenaserver/agent
