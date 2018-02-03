@@ -92,7 +92,7 @@ func makeapp() *cli.App {
 				cli.IntFlag{Name: "tps", Value: 20, Usage: "Number of ticks per second"},
 				cli.StringFlag{Name: "host", Value: "", Usage: "IP serving the trainer; required"},
 				cli.StringSliceFlag{Name: "agent", Usage: "Agent images"},
-				cli.StringSliceFlag{Name: "watch", Usage: "Agent images (with watch mode)"},
+				cli.StringSliceFlag{Name: "watch", Usage: "Agent paths (with automatic rebuild)"},
 				cli.IntFlag{Name: "port", Value: 8080, Usage: "Port serving the trainer"},
 				cli.StringFlag{Name: "viz-host", Value: "127.0.0.1", Usage: "Specify a host for the visualization server"},
 				cli.StringFlag{Name: "record-file", Value: "", Usage: "Destination file for recording the game"},
