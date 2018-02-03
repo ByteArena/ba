@@ -31,6 +31,7 @@ import (
 
 	"github.com/bytearena/ba/subcommand/build"
 	mapcmd "github.com/bytearena/ba/subcommand/map"
+	"github.com/bytearena/ba/watcher"
 )
 
 // TODO(sven): we should disable the colors when the terminal has no frontend
@@ -68,17 +69,7 @@ type TrainActionArguments struct {
 	DurationSeconds    int
 }
 
-func stringInStringSlice(l string, list []string) bool {
-	for _, r := range list {
-		if l == r {
-			return true
-		}
-	}
-	return false
-}
-
 func TrainAction(args TrainActionArguments) (bool, error) {
-
 	if args.ShouldProfile {
 		f, err := os.Create("./cpu.prof")
 		if err != nil {
@@ -165,23 +156,22 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 	// Watched agents
 	for _, agentPath := range args.WatchedAgentimages {
 
-		go func() {
-			args := build.Arguments{
-				WatchMode: true,
-			}
+		// build for the first time
+		_, buildErr := build.Main(agentPath, build.Arguments{})
 
-			_, buildErr := build.Main(agentPath, args)
+		if buildErr != nil {
+			berror := bettererrors.
+				New("Failed to build agent").
+				With(buildErr)
 
-			if buildErr != nil {
-				berror := bettererrors.
-					New("Failed to build agent").
-					With(buildErr)
+			utils.FailWith(berror)
+		}
 
-				utils.FailWith(berror)
-			}
-		}()
+		watcher, watcherr := watcher.MakeWatcher()
 
-		<-time.After(3 * time.Second)
+		if watcherr != nil {
+			return DONT_SHOW_USAGE, bettererrors.NewFromErr(err)
+		}
 
 		// Get image name from agent manifest file
 		agentManifest, parseManifestError := types.ParseAgentManifestFromDir(agentPath)
@@ -202,23 +192,44 @@ func TrainAction(args TrainActionArguments) (bool, error) {
 		agent := &types.Agent{Manifest: agentManifest}
 
 		gamedescription.AddAgent(agent)
+
 		srv.RegisterAgent(agent, nil)
 
 		go func() {
-			for {
-				// Fake changes in dir for now
-				<-time.After(5 * time.Second)
+			defer watcher.Close()
 
-				err := srv.ReloadAgent(agent)
+			watcher.Add(agentPath)
+
+			for {
+				_, buildErr := build.Main(agentPath, build.Arguments{})
+
+				if buildErr != nil {
+					berror := bettererrors.
+						New("Failed to build agent").
+						With(buildErr)
+
+					utils.FailWith(berror)
+				}
+
+				fmt.Printf("Awaiting changes in %s ...\n", agentPath)
 
 				if err != nil {
+					utils.FailWith(err)
+					return
+				}
+
+				reloadErr := srv.ReloadAgent(agent)
+
+				if reloadErr != nil {
 					berror := bettererrors.
 						New("Could not reload agent").
-						With(err)
+						With(reloadErr)
 
 					utils.FailWith(berror)
 					return
 				}
+
+				err = <-watcher.Wait()
 			}
 		}()
 	}
