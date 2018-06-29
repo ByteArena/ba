@@ -14,6 +14,7 @@ import (
 	"github.com/bytearena/ba/subcommand/build"
 	"github.com/bytearena/ba/subcommand/generate"
 	mapcmd "github.com/bytearena/ba/subcommand/map"
+	"github.com/bytearena/ba/subcommand/soccer"
 	"github.com/bytearena/ba/subcommand/train"
 )
 
@@ -87,6 +88,31 @@ func makeapp() *cli.App {
 
 				if err != nil {
 					commandFailWith("generate", showUsage, c, err)
+				}
+
+				return nil
+			},
+		},
+		{
+			Name: "soccer",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "host", Value: "", Usage: "IP serving the trainer; required"},
+				cli.StringSliceFlag{Name: "agent", Usage: "Agent images"},
+				cli.IntFlag{Name: "port", Value: 8080, Usage: "Port serving the trainer"},
+				cli.StringFlag{Name: "viz-host", Value: "127.0.0.1", Usage: "Specify a host for the visualization server"},
+			},
+			Action: func(c *cli.Context) error {
+
+				args := soccer.SoccerRunArguments{
+					Host:        c.String("host"),
+					Agentimages: c.StringSlice("agent"),
+					Vizport:     c.Int("port"),
+					Vizhost:     c.String("viz-host"),
+				}
+
+				showUsage, err := soccer.Run(args)
+				if err != nil {
+					commandFailWith("soccer", showUsage, c, err)
 				}
 
 				return nil
