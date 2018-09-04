@@ -10,7 +10,7 @@ imports:
 - name: github.com/bitly/go-notify
   version: 0a148b8111d688ba7550fc7119fe0d5d8e650838
 - name: github.com/bytearena/box2d
-  version: 58acea7fee08a5fbb5a3a4c8f867205dd9826ae1
+  version: 05f3eabc3755dd654f11a368cec066e0a3a0c3a8
 - name: github.com/bytearena/core
   version: 8a6ed75b475dcf968e0f12d579e5eb0eb11a7e91
   subpackages:

@@ -25,7 +25,7 @@ import:
 - package: github.com/dhconnelly/rtreego
 - package: github.com/skratchdot/open-golang
 - package: github.com/bytearena/box2d
-  version: ^1.0.0
+  version: ^1.0.2
 - package: github.com/bytearena/ecs
   version: 9807b7a979332b86419262a53b2b7e2295f98a9a
 - package: github.com/go-gl/mathgl
